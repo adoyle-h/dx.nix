@@ -41,7 +41,7 @@ and type `dx.nix` for help.
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     dx-nix.url = "github:adoyle-h/dx.nix";
     dx-nix.inputs.nixpkgs.follows = "nixpkgs";
-    # dx.nix will create ~/.cache/dx.nix/runtime , don't change it
+    # dx.nix will create ~/.cache/dx.nix/runtime and rewrite the path, don't modify it
     dx-nix-runtime.url = "path:~/.cache/dx.nix/runtime";
     # other third nix flake
   };
@@ -101,11 +101,16 @@ and type `dx.nix` for help.
 
 ### Module
 
+All modules should be [flake-parts modules](https://flake.parts/options/flake-parts-modules.html#opt-flake.modules).
+
 For example, create a file at `features/cli.nix`.
 
 ```nix
 {
-  flake.modules.generic.cli = {pkgs, lib, ...}: {
+  # Note that if you use the args@{ ... } or args: syntax,
+  # you only receive the arguments you explicitly name in the function signature;
+  # see https://flake.parts/module-arguments.html
+  flake.modules.generic.cli = args@{pkgs, lib, ...}: {
     environment.systemPackages = with pkgs; [
       stdenv.cc
       binutils
@@ -202,7 +207,12 @@ flake.modules.generic.adoyle = {
 - `dx.nix eval #path` : for debug
 
 
-## sops.nix
+## Secrets
+
+dx.nix uses [sops.nix](https://github.com/mic92/sops-nix) to manage secrets.
+
+For example, following the [sops-nix#usage-example](https://github.com/mic92/sops-nix#usage-example) to create a file `secrets/secret.yaml` and `.sops.yaml` in your folder.
+
 
 ```
 ./
@@ -216,12 +226,16 @@ flake.modules.generic.adoyle = {
 │   ├── user-2.nix
 │   └── root.nix
 ├── secrets/
-│   └── secret.yaml   # it just an example, you can put the file to anywhere
+│   └── secret.yaml
 ├── .sops.yaml
 └── flake.nix
 ```
 
-Create a file `features/sops.nix`.
+`sops secrets/secret.yaml` to edit your secrets.
+
+put your age key to `/var/lib/sops-nix/key.txt` (the age key must be out of your flake folder)
+
+And create a file `features/sops.nix`.
 
 ```nix
 {inputs, ...}: {
@@ -239,6 +253,9 @@ Create a file `features/sops.nix`.
 }
 ```
 
+## Development
+
+`nix profile add github:adoyle-h/dx.nix/develop` to get dx.nix from the develop branch.
 
 ## Suggestion, Bug Reporting, Contributing
 

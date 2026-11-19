@@ -54,8 +54,9 @@ Darwin)
   if ! command_exists darwin-rebuild; then
     nix profile add "$(GITHUB_URL 'https://github.com/nix-darwin/nix-darwin')#darwin-rebuild"
   fi
-  echo "sudo darwin-rebuild switch -L --impure --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
-  sudo darwin-rebuild switch -L --impure --show-trace \
+  echo "sudo darwin-rebuild switch -L --impure --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
+  sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY \
+    darwin-rebuild switch -L --impure --show-trace \
     --override-input dx-nix-runtime "path:$RUNTIME_DIR" \
     --flake "${flake}#${HOSTNAME}" \
     --option accept-flake-config true
@@ -72,8 +73,10 @@ Linux)
   nixos)
     command_exists nixos-rebuild || die "nixos-rebuild not found"
 
-    echo "sudo nixos-rebuild switch --flake ${flake}#${HOSTNAME}"
-    sudo HOSTNAME="$HOSTNAME" nixos-rebuild switch -L --impure --show-trace \
+    # https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/ni/nixos-rebuild-ng/nixos-rebuild.8.scd
+    echo "nixos-rebuild --sudo switch -L --impure --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
+    sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY \
+      nixos-rebuild switch -L --impure --show-trace \
       --override-input dx-nix-runtime "path:$RUNTIME_DIR" \
       --flake "${flake}#${HOSTNAME}" \
       --option accept-flake-config true
@@ -83,11 +86,19 @@ Linux)
     if ! command_exists system-manager; then
       nix profile add "$GITHUB_URL('https://github.com/numtide/system-manager')"
     fi
-    echo "system-manager switch --nix-option accept-flake-config true --sudo --flake ${flake}#${HOSTNAME}"
-    system-manager switch --sudo \
+    echo "system-manager switch --sudo --flake ${flake}#${HOSTNAME} --nix-option -L --nix-option --impure --nix-option --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --nix-option accept-flake-config true"
+    exec system-manager switch --sudo \
       --flake "${flake}#${HOSTNAME}" \
+      --nix-option pure-eval false \
+      --nix-option show-trace true \
       --nix-option accept-flake-config true
+    # --nix-option -L \
+    # --nix-option --impure \
+    # --nix-option --show-trace \
+    # --nix-option "--override-input dx-nix-runtime path:$RUNTIME_DIR" \
+    # --nix-option accept-flake-config true
     ;;
+
   esac
   ;;
 

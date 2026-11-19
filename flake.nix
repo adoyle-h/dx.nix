@@ -29,11 +29,18 @@
     packages = nixpkgs.lib.genAttrs systems (system: let
       pkgs = nixpkgs.legacyPackages.${system};
     in {
-      default = pkgs.runCommand "dx.nix" {} ''
-        mkdir -p $out/bin/cmds
-        cp -r ${./bin}/* $out/bin/
-        chmod -R +x $out/bin/*
-      '';
+      default =
+        pkgs.runCommand "dx.nix" {
+          nativeBuildInputs = [
+            pkgs.installShellFiles
+          ];
+        } ''
+          mkdir -p $out/bin/cmds
+          cp -r ${./bin}/* $out/bin/
+          chmod -R +x $out/bin/*
+
+          installShellCompletion --bash ${./bin/completions/dx.nix.bash}
+        '';
     });
   };
 }
