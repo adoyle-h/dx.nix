@@ -15,8 +15,8 @@ Usage:
 Commands:
   switch    Build and activate configuration
   build     Build configuration
-  inspect   Inspect current host and configuration
-  hosts     List configured hosts
+  activate
+  eval
   help      Show this help
 
 Options:
@@ -36,19 +36,14 @@ if (($# > 0)); then
 fi
 
 case "$command" in
-switch | build | inspect | hosts | eval)
-  script="$SCRIPT_DIR/cmds/$command"
-
-  [[ -x "$script" ]] || die "Command not found: $command"
-
-  exec "$script" "$@"
-  ;;
-
 help | -h | --help)
   usage
   ;;
 
 *)
-  die "Unknown command: $command (run '$PROGRAM help')"
+  script="$SCRIPT_DIR/cmds/$command"
+
+  [[ -x "$script" ]] || die "Unknown command: $command (run '$PROGRAM help')"
+  exec "$script" "$@"
   ;;
 esac

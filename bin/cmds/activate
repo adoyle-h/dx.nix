@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+set -o errexit -o nounset -o pipefail -o errtrace
+(shopt -p inherit_errexit &>/dev/null) && shopt -s inherit_errexit
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+FRAMEWORK_NAME=dx.nix
+USER_CONFIG_DIR=$PWD
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"/$FRAMEWORK_NAME
+CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"/$FRAMEWORK_NAME
+RUNTIME_DIR="$CACHE_HOME/runtime"
+
+HOSTNAME="$(hostname -s)"
+OS="$(uname -s)"
+ARCH="$(uname -m)"
+echo "host=$HOSTNAME os=$OS ARCH=$ARCH"
+
+mkdir -p "$RUNTIME_DIR"
+printf '{ outputs = inputs: { hostname = "%s"; os = "%s"; arch= "%s"; }; }' \
+  "$HOSTNAME" "$OS" "$ARCH" >"$RUNTIME_DIR/flake.nix"
+
+flake="$USER_CONFIG_DIR"
+
+if [[ -d $HOME/.nix-profile/bin/ ]]; then
+  # For darwin-rebuild and system-manager bins
+  PATH=$HOME/.nix-profile/bin/:$PATH
+fi
+
+die() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+case ${CHINA:-y} in
+y | Y | yes | YES | 1)
+  GITHUB_URL() {
+    echo "git+https://ghfast.top/$1"
+  }
+  ;;
+*)
+  GITHUB_URL() {
+    echo "$1"
+  }
+  ;;
+esac
+
+command_exists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+case "$OS" in
+Darwin)
+  if ! command_exists darwin-rebuild; then
+    nix profile add "$(GITHUB_URL 'https://github.com/nix-darwin/nix-darwin')#darwin-rebuild"
+  fi
+  echo "sudo darwin-rebuild activate -L --impure --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
+  sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY \
+    darwin-rebuild activate -L --impure --show-trace \
+    --override-input dx-nix-runtime "path:$RUNTIME_DIR" \
+    --flake "${flake}#${HOSTNAME}" \
+    --option accept-flake-config true
+  ;;
+
+Linux)
+  if [[ -r /etc/os-release ]]; then
+    . /etc/os-release
+  else
+    die "cannot determine Linux distribution"
+  fi
+
+  case "${ID:-}" in
+  nixos)
+    command_exists nixos-rebuild || die "nixos-rebuild not found"
+
+    # https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/ni/nixos-rebuild-ng/nixos-rebuild.8.scd
+    echo "nixos-rebuild --sudo activate -L --impure --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
+    sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY \
+      nixos-rebuild activate -L --impure --show-trace \
+      --override-input dx-nix-runtime "path:$RUNTIME_DIR" \
+      --flake "${flake}#${HOSTNAME}" \
+      --option accept-flake-config true
+    ;;
+
+  *)
+    if ! command_exists system-manager; then
+      nix profile add "$GITHUB_URL('https://github.com/numtide/system-manager')"
+    fi
+    echo "system-manager activate --sudo --flake ${flake}#${HOSTNAME} --nix-option -L --nix-option --impure --nix-option --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --nix-option accept-flake-config true"
+    exec system-manager activate --sudo \
+      --flake "${flake}#${HOSTNAME}" \
+      --nix-option pure-eval false \
+      --nix-option show-trace true \
+      --nix-option accept-flake-config true
+    # --nix-option -L \
+    # --nix-option --impure \
+    # --nix-option --show-trace \
+    # --nix-option "--override-input dx-nix-runtime path:$RUNTIME_DIR" \
+    # --nix-option accept-flake-config true
+    ;;
+
+  esac
+  ;;
+
+*)
+  die "unsupported operating system: $OS"
+  ;;
+esac

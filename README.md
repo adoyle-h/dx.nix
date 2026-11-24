@@ -1,10 +1,11 @@
 # dx.nix
 
-A simple nix system framework which follows the [Dendritic Pattern](https://github.com/mightyiam/dendritic).
+A simple nix system framework for MacOS/NixOS/Linux. It follows the [Dendritic Pattern](https://github.com/mightyiam/dendritic).
 
 ## Features
 
 - It supports NixOS, MacOS, and any Linux systems.
+- It supports multiple hosts. And it uses one flake.nix to manage all hosts.
 - It uses [flake.nix](https://wiki.nixos.org/wiki/Flakes) and `dx.nix` command to manage settings.
 - It manages modules via [flake-parts](https://github.com/hercules-ci/flake-parts). User should pass argument `moduleDirs` to `inputs.dx-nix.mkFlake`.
 - It is just a modular framework. No providing any builtin modules.

@@ -72,16 +72,16 @@ Linux)
   nixos)
     command_exists nixos-rebuild || die "nixos-rebuild not found"
 
-    echo "sudo nixos-rebuild switch --flake ${flake}#${HOSTNAME}"
-    sudo HOSTNAME="$HOSTNAME" nixos-rebuild switch --flake "${flake}#${HOSTNAME}"
+    echo "sudo nixos-rebuild build --flake ${flake}#${HOSTNAME}"
+    sudo HOSTNAME="$HOSTNAME" nixos-rebuild build --flake "${flake}#${HOSTNAME}"
     ;;
 
   *)
     if ! command_exists system-manager; then
       nix profile add "$GITHUB_URL('https://github.com/numtide/system-manager')"
     fi
-    echo "system-manager switch --nix-option accept-flake-config true --sudo --flake ${flake}#${HOSTNAME}"
-    system-manager switch --nix-option accept-flake-config true --sudo --flake "${flake}#${HOSTNAME}"
+    echo "system-manager build --nix-option accept-flake-config true --sudo --flake ${flake}#${HOSTNAME}"
+    system-manager build --nix-option accept-flake-config true --sudo --flake "${flake}#${HOSTNAME}"
     ;;
   esac
   ;;

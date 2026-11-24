@@ -6,12 +6,12 @@ _dx.nix() {
     prev="${COMP_WORDS[COMP_CWORD - 1]}"
 
     case "$prev" in
-    switch | update | build)
+    switch | build | active | eval | help)
         return 0
         ;;
     esac
 
-    COMPREPLY=($(compgen -W "switch update build help" -- "$cur"))
+    COMPREPLY=($(compgen -W "switch build activate eval help" -- "$cur"))
 }
 
 complete -F _dx.nix dx.nix
