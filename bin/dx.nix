@@ -13,11 +13,12 @@ Usage:
   $PROGRAM <command> [options]
 
 Commands:
-  switch    Build and activate configuration
-  build     Build configuration
+  switch                  Build and activate configuration
+  build                   Build configuration
   activate
   eval
-  help      Show this help
+  update [input-name]     Update the input flake
+  help                    Show this help
 
 Options:
   -h, --help    Show help

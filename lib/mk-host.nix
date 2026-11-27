@@ -25,7 +25,13 @@
 
   featureModules = map getFeatureModule features;
 
-  commonModules = featureModules;
+  commonModules =
+    featureModules
+    ++ [
+      {
+        nixpkgs.hostPlatform = system;
+      }
+    ];
 
   nixosModules =
     commonModules
@@ -44,7 +50,6 @@
     ++ [
       inputs.home-manager.nixosModules.home-manager
       {
-        nixpkgs.hostPlatform = system;
         system-manager = {
           allowAnyDistro = true;
         };
