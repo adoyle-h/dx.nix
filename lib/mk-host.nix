@@ -54,21 +54,21 @@ in
   {
     nixos = assert backend == "nixos"; {
       flake.nixosConfigurations.${hostname} = inputs.nixpkgs.lib.nixosSystem {
-        inherit system;
+        specialArgs = {inherit inputs;};
         modules = nixosModules;
       };
     };
 
     darwin = assert backend == "darwin"; {
       flake.darwinConfigurations.${hostname} = inputs.nix-darwin.lib.darwinSystem {
-        inherit system;
+        specialArgs = {inherit inputs;};
         modules = darwinModules;
       };
     };
 
     system-manager = assert backend == "system-manager"; {
       flake.systemConfigs.${hostname} = inputs.system-manager.lib.makeSystemConfig {
-        inherit system;
+        specialArgs = {inherit inputs;};
         modules = systemManagerModules;
       };
     };
