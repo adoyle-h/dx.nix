@@ -54,7 +54,7 @@ Darwin)
   if ! command_exists darwin-rebuild; then
     nix profile add "$(GITHUB_URL 'https://github.com/nix-darwin/nix-darwin')#darwin-rebuild"
   fi
-  echo "sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY darwin-rebuild switch -L --impure --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
+  echo "sudo darwin-rebuild switch -L --impure --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
   sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY \
     darwin-rebuild switch -L --impure --show-trace \
     --override-input dx-nix-runtime "path:$RUNTIME_DIR" \
@@ -74,7 +74,7 @@ Linux)
     command_exists nixos-rebuild || die "nixos-rebuild not found"
 
     # https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/ni/nixos-rebuild-ng/nixos-rebuild.8.scd
-    echo "sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY nixos-rebuild switch -L --impure --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
+    echo "sudo nixos-rebuild switch -L --impure --show-trace --override-input dx-nix-runtime \"path:$RUNTIME_DIR\" --flake ${flake}#${HOSTNAME} --option accept-flake-config true"
     sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY \
       nixos-rebuild switch -L --impure --show-trace \
       --override-input dx-nix-runtime "path:$RUNTIME_DIR" \

@@ -32,6 +32,8 @@ die() {
   exit 1
 }
 
-echo "nix flake update ${1:-} --override-input dx-nix-runtime "path:$RUNTIME_DIR"
-exec nix flake update ${1:-}" \
+echo "sudo nix flake update ${1:-} --option accept-flake-config true --override-input dx-nix-runtime path:$RUNTIME_DIR"
+sudo --preserve-env=ALL_PROXY,HTTP_PROXY,HTTPS_PROXY \
+  nix flake update "${1:-}" \
+  --option accept-flake-config true \
   --override-input dx-nix-runtime "path:$RUNTIME_DIR"
